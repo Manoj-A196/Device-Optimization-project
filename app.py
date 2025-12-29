@@ -1,107 +1,110 @@
 import streamlit as st
-import pandas as pd
 
 # --------------------------------------------------
 # PAGE CONFIG
 # --------------------------------------------------
 st.set_page_config(
-    page_title="Device Optimization for Privacy-Preserving Mobile Computing",
+    page_title="Device Optimization Demo",
     page_icon="📱",
     layout="wide"
 )
 
 st.title("📱 Device Optimization for Privacy-Preserving Mobile Computing")
-st.caption("Working demo model – academic simulation")
+st.caption("Input → Optimization → Output (Working Demo Model)")
 
 st.divider()
 
 # --------------------------------------------------
-# INITIAL DEVICE DATA (BEFORE OPTIMIZATION)
+# USER INPUT SECTION
 # --------------------------------------------------
-data = {
-    "App / Device": [
-        "Instagram",
-        "Facebook",
-        "X (Twitter)",
-        "Snapchat",
-        "Google Maps",
-        "Music Player"
-    ],
-    "Data Accessed": [
-        "Location, Usage",
-        "Location, Personal Info",
-        "Usage Data",
-        "Location",
-        "Location",
-        "None"
-    ],
-    "CPU Usage": ["High", "High", "Medium", "Medium", "Medium", "Low"],
-    "Network Usage": ["High", "High", "High", "Medium", "Medium", "Low"],
-    "Privacy Risk": ["High 🔴", "High 🔴", "High 🔴", "Medium 🟠", "Medium 🟠", "Low 🟢"]
-}
+st.subheader("🔧 Device / App Input Configuration")
 
-df = pd.DataFrame(data)
+app_name = st.selectbox(
+    "Select Mobile Application",
+    ["Instagram", "Facebook", "X (Twitter)", "Snapchat", "Google Maps", "Music Player"]
+)
 
-# --------------------------------------------------
-# DISPLAY BEFORE OPTIMIZATION
-# --------------------------------------------------
-st.subheader("🔍 Device Status – Before Optimization")
-st.dataframe(df, use_container_width=True)
+data_access = st.multiselect(
+    "Select Data Accessed by App",
+    ["Location", "Personal Information", "Usage Data"]
+)
+
+cpu_usage = st.selectbox(
+    "CPU Usage Level",
+    ["Low", "Medium", "High"]
+)
+
+network_usage = st.selectbox(
+    "Network Usage Level",
+    ["Low", "Medium", "High"]
+)
 
 st.divider()
+
+# --------------------------------------------------
+# RISK CALCULATION FUNCTION
+# --------------------------------------------------
+def calculate_risk(data, cpu, network):
+    if "Personal Information" in data or network == "High":
+        return "High 🔴"
+    elif "Location" in data:
+        return "Medium 🟠"
+    else:
+        return "Low 🟢"
 
 # --------------------------------------------------
 # OPTIMIZATION BUTTON
 # --------------------------------------------------
-optimize = st.button("⚙️ Optimize Devices")
+if st.button("⚙️ Optimize Device"):
+    st.subheader("📊 System Processing & Output")
 
-# --------------------------------------------------
-# AFTER OPTIMIZATION LOGIC
-# --------------------------------------------------
-if optimize:
-    st.subheader("✅ Device Status – After Optimization")
+    # Before optimization
+    before_risk = calculate_risk(data_access, cpu_usage, network_usage)
 
-    optimized_data = {
-        "App / Device": df["App / Device"],
-        "CPU Usage": ["Medium", "Medium", "Low", "Low", "Low", "Low"],
-        "Network Usage": ["Low", "Low", "Low", "Low", "Low", "Low"],
-        "Privacy Risk": ["Medium 🟠", "Medium 🟠", "Low 🟢", "Low 🟢", "Low 🟢", "Low 🟢"]
-    }
-
-    optimized_df = pd.DataFrame(optimized_data)
-    st.dataframe(optimized_df, use_container_width=True)
-
-    st.success("Device optimization completed successfully")
+    st.markdown("### 🔴 Before Optimization")
+    st.write(f"**App Name:** {app_name}")
+    st.write(f"**Privacy Risk:** {before_risk}")
+    st.write(f"**CPU Usage:** {cpu_usage}")
+    st.write(f"**Network Usage:** {network_usage}")
 
     st.divider()
 
     # --------------------------------------------------
-    # PRIVACY PRESERVATION STATUS
+    # OPTIMIZATION LOGIC
+    # --------------------------------------------------
+    optimized_cpu = "Low" if cpu_usage != "Low" else "Low"
+    optimized_network = "Low"
+
+    optimized_data = [
+        d for d in data_access if d != "Personal Information"
+    ]
+
+    after_risk = calculate_risk(optimized_data, optimized_cpu, optimized_network)
+
+    # After optimization
+    st.markdown("### 🟢 After Optimization")
+    st.write(f"**Optimized CPU Usage:** {optimized_cpu}")
+    st.write(f"**Optimized Network Usage:** {optimized_network}")
+    st.write(f"**Blocked Raw Data:** Personal Information")
+    st.write(f"**Privacy Risk:** {after_risk}")
+
+    st.success("Device optimized successfully with privacy preservation")
+
+    st.divider()
+
+    # --------------------------------------------------
+    # PRIVACY CONFIRMATION
     # --------------------------------------------------
     st.subheader("🔐 Privacy Preservation Status")
 
     st.info("""
-    ✔ Raw user data remains on the device  
-    ✔ Only optimized insights are used  
-    ✔ Centralized raw data storage is avoided  
+    ✔ Raw personal data blocked  
+    ✔ Data processed locally on device  
+    ✔ Reduced network communication  
+    ✔ Improved performance and security  
     """)
-
-    st.divider()
-
-    # --------------------------------------------------
-    # SECURITY & PERFORMANCE
-    # --------------------------------------------------
-    st.subheader("🛡 Security & Performance Management")
-
-    col1, col2, col3 = st.columns(3)
-
-    col1.metric("Secure Participation", "Enabled")
-    col2.metric("Communication", "Encrypted")
-    col3.metric("Latency", "Reduced")
-
-    st.success("System performance optimized with privacy preservation")
 
 # --------------------------------------------------
 # FOOTER
 # --------------------------------------------------
-st.caption("Simulated working model for academic demonstration")
+st.caption("Interactive working model – academic demonstration")
