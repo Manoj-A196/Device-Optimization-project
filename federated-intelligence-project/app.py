@@ -16,21 +16,36 @@ st.caption("Simulation of raw data and sensitive information tracking in mobile 
 st.divider()
 
 # ---------------------------------------
-# SIMULATED DEVICE DATA
+# SIMULATED DEVICE / APP DATA
 # ---------------------------------------
 data = {
     "Device / App Name": [
-        "Location Tracker",
-        "Social Media App",
+        "Instagram",
+        "Facebook",
+        "X (Twitter)",
+        "Snapchat",
+        "Location Tracker Service",
         "Fitness App",
         "Camera Service",
         "System Analytics",
         "Music Player"
     ],
-    "Tracks Location": ["Yes", "Yes", "No", "No", "No", "No"],
-    "Tracks Personal Info": ["No", "Yes", "No", "No", "No", "No"],
-    "Tracks Usage Data": ["Yes", "Yes", "Yes", "No", "Yes", "No"],
-    "Tracks Raw Data": ["Yes", "Yes", "No", "No", "Yes", "No"]
+    "Tracks Location": [
+        "Yes", "Yes", "Yes", "Yes",
+        "Yes", "No", "No", "No", "No"
+    ],
+    "Tracks Personal Info": [
+        "Yes", "Yes", "Yes", "Yes",
+        "No", "No", "No", "No", "No"
+    ],
+    "Tracks Usage Data": [
+        "Yes", "Yes", "Yes", "Yes",
+        "Yes", "Yes", "No", "Yes", "No"
+    ],
+    "Tracks Raw Data": [
+        "Yes", "Yes", "Yes", "Yes",
+        "Yes", "No", "No", "Yes", "No"
+    ]
 }
 
 df = pd.DataFrame(data)
@@ -52,23 +67,19 @@ df["Privacy Risk Level"] = df.apply(calculate_risk, axis=1)
 # DISPLAY TABLE
 # ---------------------------------------
 st.subheader("📱 Detected Devices / Applications")
-
 st.dataframe(df, use_container_width=True)
 
 st.divider()
 
 # ---------------------------------------
-# RAW DATA TRACKING HIGHLIGHT
+# RAW DATA TRACKING ALERT
 # ---------------------------------------
 st.subheader("🚨 Raw Data Tracking Detection")
 
 raw_tracking = df[df["Tracks Raw Data"] == "Yes"]
 
-if not raw_tracking.empty:
-    for device in raw_tracking["Device / App Name"]:
-        st.error(f"⚠️ {device} is tracking RAW USER DATA")
-else:
-    st.success("No devices detected tracking raw data")
+for device in raw_tracking["Device / App Name"]:
+    st.error(f"⚠️ {device} is tracking RAW USER DATA")
 
 st.divider()
 
@@ -79,18 +90,15 @@ st.subheader("🔐 Privacy Status Summary")
 
 col1, col2, col3 = st.columns(3)
 
-col1.metric("Total Devices", len(df))
-col2.metric("Raw Data Tracking", len(raw_tracking))
-col3.metric(
-    "Privacy Status",
-    "At Risk" if len(raw_tracking) > 0 else "Safe"
-)
+col1.metric("Total Apps", len(df))
+col2.metric("Raw Data Tracking Apps", len(raw_tracking))
+col3.metric("Overall Privacy Status", "At Risk 🔴")
 
 st.info("""
-✔ This model simulates privacy monitoring  
-✔ Raw data tracking is highlighted clearly  
+✔ This is a simulated privacy monitoring model  
+✔ Real-world app names are used for demonstration  
 ✔ No real user data is accessed  
-✔ Demonstrates need for privacy-preserving architectures
+✔ Shows why privacy-preserving systems are needed
 """)
 
-st.caption("Academic demo – simulated privacy tracking model")
+st.caption("Academic demo – simulated privacy tracking working model")
