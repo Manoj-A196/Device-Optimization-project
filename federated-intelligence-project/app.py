@@ -1,104 +1,103 @@
 import streamlit as st
-import pandas as pd
+import random
+import time
 
-# ---------------------------------------
+# --------------------------------------------------
 # PAGE CONFIG
-# ---------------------------------------
+# --------------------------------------------------
 st.set_page_config(
-    page_title="Privacy Tracking Demo",
-    page_icon="🔐",
+    page_title="Federated Intelligence – Working Model",
+    page_icon="📱",
     layout="wide"
 )
 
-st.title("🔍 Device Privacy Tracking – Working Model")
-st.caption("Simulation of raw data and sensitive information tracking in mobile devices")
+st.title("🤖 Federated Intelligence – Demo Working Model")
+st.caption("Privacy-Preserving Mobile Computing Simulation")
 
 st.divider()
 
-# ---------------------------------------
-# SIMULATED DEVICE / APP DATA
-# ---------------------------------------
-data = {
-    "Device / App Name": [
-        "Instagram",
-        "Facebook",
-        "X (Twitter)",
-        "Snapchat",
-        "Location Tracker Service",
-        "Fitness App",
-        "Camera Service",
-        "System Analytics",
-        "Music Player"
-    ],
-    "Tracks Location": [
-        "Yes", "Yes", "Yes", "Yes",
-        "Yes", "No", "No", "No", "No"
-    ],
-    "Tracks Personal Info": [
-        "Yes", "Yes", "Yes", "Yes",
-        "No", "No", "No", "No", "No"
-    ],
-    "Tracks Usage Data": [
-        "Yes", "Yes", "Yes", "Yes",
-        "Yes", "Yes", "No", "Yes", "No"
-    ],
-    "Tracks Raw Data": [
-        "Yes", "Yes", "Yes", "Yes",
-        "Yes", "No", "No", "Yes", "No"
-    ]
-}
+# --------------------------------------------------
+# CONFIGURATION PANEL
+# --------------------------------------------------
+st.sidebar.header("⚙️ Simulation Configuration")
 
-df = pd.DataFrame(data)
+num_devices = st.sidebar.slider("Number of Mobile Devices", 2, 10, 5)
+participation_rate = st.sidebar.slider("Device Participation (%)", 50, 100, 80)
+rounds = st.sidebar.slider("Federated Rounds", 1, 5, 3)
 
-# ---------------------------------------
-# RISK LEVEL CALCULATION
-# ---------------------------------------
-def calculate_risk(row):
-    if row["Tracks Raw Data"] == "Yes":
-        return "High 🔴"
-    elif row["Tracks Personal Info"] == "Yes":
-        return "Medium 🟠"
+start = st.sidebar.button("▶ Start Simulation")
+
+# --------------------------------------------------
+# INITIALIZATION
+# --------------------------------------------------
+if "global_accuracy" not in st.session_state:
+    st.session_state.global_accuracy = 50.0
+
+# --------------------------------------------------
+# MAIN DEMO
+# --------------------------------------------------
+if start:
+    st.subheader("📱 Local Device Training")
+
+    participating_devices = int(num_devices * participation_rate / 100)
+    device_updates = []
+
+    cols = st.columns(2)
+
+    for i in range(participating_devices):
+        with cols[i % 2]:
+            st.markdown(f"**Device {i+1}**")
+
+            local_accuracy = random.uniform(45, 60)
+            progress = st.progress(0)
+
+            for step in range(100):
+                time.sleep(0.01)
+                progress.progress(step + 1)
+
+            update = random.uniform(1.0, 3.0)
+            device_updates.append(update)
+
+            st.success(f"Update Sent: +{update:.2f}")
+            st.caption("🔒 Raw data stayed on device")
+
+    st.divider()
+
+    # --------------------------------------------------
+    # AGGREGATION
+    # --------------------------------------------------
+    st.subheader("☁️ Secure Aggregation Server")
+
+    if device_updates:
+        aggregated_update = sum(device_updates) / len(device_updates)
+        st.session_state.global_accuracy += aggregated_update
+
+        st.metric(
+            label="🌍 Global Model Accuracy",
+            value=f"{st.session_state.global_accuracy:.2f}%",
+            delta=f"+{aggregated_update:.2f}"
+        )
+
+        st.success("Model updates aggregated successfully")
     else:
-        return "Low 🟢"
+        st.error("No devices participated")
 
-df["Privacy Risk Level"] = df.apply(calculate_risk, axis=1)
+    st.divider()
 
-# ---------------------------------------
-# DISPLAY TABLE
-# ---------------------------------------
-st.subheader("📱 Detected Devices / Applications")
-st.dataframe(df, use_container_width=True)
+    # --------------------------------------------------
+    # PRIVACY STATUS
+    # --------------------------------------------------
+    st.subheader("🔐 Privacy Verification")
 
-st.divider()
+    st.info("""
+    ✔ Raw user data: **NOT SHARED**  
+    ✔ Model updates only: **SHARED**  
+    ✔ Central data storage: **NOT USED**  
+    """)
 
-# ---------------------------------------
-# RAW DATA TRACKING ALERT
-# ---------------------------------------
-st.subheader("🚨 Raw Data Tracking Detection")
+    st.success("Privacy Preserved via Federated Intelligence")
 
-raw_tracking = df[df["Tracks Raw Data"] == "Yes"]
-
-for device in raw_tracking["Device / App Name"]:
-    st.error(f"⚠️ {device} is tracking RAW USER DATA")
-
-st.divider()
-
-# ---------------------------------------
-# PRIVACY SUMMARY
-# ---------------------------------------
-st.subheader("🔐 Privacy Status Summary")
-
-col1, col2, col3 = st.columns(3)
-
-col1.metric("Total Apps", len(df))
-col2.metric("Raw Data Tracking Apps", len(raw_tracking))
-col3.metric("Overall Privacy Status", "At Risk 🔴")
-
-st.info("""
-✔ This is a simulated privacy monitoring model  
-✔ Real-world app names are used for demonstration  
-✔ No real user data is accessed  
-✔ Shows why privacy-preserving systems are needed
-""")
-
-st.caption("Academic demo – simulated privacy tracking working model")
+# --------------------------------------------------
+# FOOTER
+# --------------------------------------------------
+st.caption("Academic demo – simulated federated intelligence working model")
