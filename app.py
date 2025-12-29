@@ -1,23 +1,22 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
 
 # --------------------------------------------------
 # PAGE CONFIG
 # --------------------------------------------------
 st.set_page_config(
-    page_title="Device Optimization – Privacy Preserving Mobile Computing",
+    page_title="Device Optimization for Privacy-Preserving Mobile Computing",
     page_icon="📱",
     layout="wide"
 )
 
 st.title("📱 Device Optimization for Privacy-Preserving Mobile Computing")
-st.caption("Multi-device simulation | Centralized vs Optimized | Federated-style demo")
+st.caption("Interactive Working Model | Input → Optimization → Output")
 
 st.divider()
 
 # --------------------------------------------------
-# DEVICE INPUT CONFIGURATION
+# DEVICE INPUT SECTION
 # --------------------------------------------------
 st.subheader("🔧 Device Input Configuration")
 
@@ -25,36 +24,41 @@ num_devices = st.slider("Number of Mobile Devices", 1, 5, 3)
 
 apps = ["Instagram", "Facebook", "X (Twitter)", "Snapchat", "Google Maps"]
 
-device_data = []
+device_inputs = []
 
 for i in range(num_devices):
     st.markdown(f"### 📱 Device {i+1}")
-    app = st.selectbox(f"Select App (Device {i+1})", apps, key=f"app{i}")
+
+    app = st.selectbox(
+        "Select Application",
+        apps,
+        key=f"app_{i}"
+    )
 
     data_access = st.multiselect(
-        f"Data Accessed (Device {i+1})",
+        "Data Accessed",
         ["Location", "Personal Information", "Usage Data"],
-        key=f"data{i}"
+        key=f"data_{i}"
     )
 
-    cpu = st.selectbox(
-        f"CPU Usage (Device {i+1})",
+    cpu_usage = st.selectbox(
+        "CPU Usage Level",
         ["Low", "Medium", "High"],
-        key=f"cpu{i}"
+        key=f"cpu_{i}"
     )
 
-    network = st.selectbox(
-        f"Network Usage (Device {i+1})",
+    network_usage = st.selectbox(
+        "Network Usage Level",
         ["Low", "Medium", "High"],
-        key=f"net{i}"
+        key=f"net_{i}"
     )
 
-    device_data.append({
+    device_inputs.append({
         "Device": f"Device {i+1}",
         "App": app,
         "Data": data_access,
-        "CPU": cpu,
-        "Network": network
+        "CPU": cpu_usage,
+        "Network": network_usage
     })
 
 st.divider()
@@ -62,7 +66,10 @@ st.divider()
 # --------------------------------------------------
 # HELPER FUNCTIONS
 # --------------------------------------------------
-def risk_level(data, cpu, network):
+def usage_to_num(value):
+    return {"Low": 1, "Medium": 2, "High": 3}[value]
+
+def calculate_risk(data, network):
     if "Personal Information" in data or network == "High":
         return 3
     elif "Location" in data:
@@ -71,100 +78,113 @@ def risk_level(data, cpu, network):
         return 1
 
 def risk_label(level):
-    return ["Low 🟢", "Medium 🟠", "High 🔴"][level-1]
+    return {1: "Low 🟢", 2: "Medium 🟠", 3: "High 🔴"}[level]
 
 # --------------------------------------------------
-# PROCESS BUTTON
+# RUN SIMULATION
 # --------------------------------------------------
-if st.button("▶ Run Device Optimization Simulation"):
-    st.subheader("📊 Centralized vs Optimized Processing")
+if st.button("▶ Run Optimization Simulation"):
 
-    centralized = []
-    optimized = []
-    federated_log = []
+    centralized_rows = []
+    optimized_rows = []
+    log_messages = []
 
-    for d in device_data:
-        # CENTRALIZED
-        c_cpu = 3 if d["CPU"] == "High" else 2 if d["CPU"] == "Medium" else 1
-        c_net = 3 if d["Network"] == "High" else 2 if d["Network"] == "Medium" else 1
-        c_risk = risk_level(d["Data"], d["CPU"], d["Network"])
+    for d in device_inputs:
+        # -------- CENTRALIZED PROCESSING --------
+        c_cpu = usage_to_num(d["CPU"])
+        c_net = usage_to_num(d["Network"])
+        c_risk = calculate_risk(d["Data"], d["Network"])
 
-        # OPTIMIZED (FEDERATED STYLE)
+        centralized_rows.append([
+            d["Device"],
+            d["App"],
+            c_cpu,
+            c_net,
+            risk_label(c_risk)
+        ])
+
+        # -------- OPTIMIZED (FEDERATED STYLE) --------
         o_cpu = max(1, c_cpu - 1)
         o_net = 1
-        o_data = [x for x in d["Data"] if x != "Personal Information"]
-        o_risk = risk_level(o_data, "Low", "Low")
+        filtered_data = [x for x in d["Data"] if x != "Personal Information"]
+        o_risk = calculate_risk(filtered_data, "Low")
 
-        centralized.append([d["Device"], d["App"], c_cpu, c_net, c_risk])
-        optimized.append([d["Device"], d["App"], o_cpu, o_net, o_risk])
+        optimized_rows.append([
+            d["Device"],
+            d["App"],
+            o_cpu,
+            o_net,
+            risk_label(o_risk)
+        ])
 
-        federated_log.append(
-            f"{d['Device']} processed data locally → sent optimized update → raw data blocked"
+        log_messages.append(
+            f"{d['Device']} → Local processing enabled | Raw data blocked | Optimized update shared"
         )
 
     # --------------------------------------------------
     # DATAFRAMES
     # --------------------------------------------------
-    df_c = pd.DataFrame(
-        centralized,
-        columns=["Device", "App", "CPU", "Network", "Privacy Risk"]
+    df_centralized = pd.DataFrame(
+        centralized_rows,
+        columns=["Device", "App", "CPU Usage", "Network Usage", "Privacy Risk"]
     )
 
-    df_o = pd.DataFrame(
-        optimized,
-        columns=["Device", "App", "CPU", "Network", "Privacy Risk"]
+    df_optimized = pd.DataFrame(
+        optimized_rows,
+        columns=["Device", "App", "CPU Usage", "Network Usage", "Privacy Risk"]
     )
+
+    st.subheader("📊 Centralized vs Optimized Processing")
 
     col1, col2 = st.columns(2)
 
     with col1:
         st.markdown("### 🔴 Centralized Processing")
-        st.dataframe(df_c)
+        st.dataframe(df_centralized, use_container_width=True)
 
     with col2:
-        st.markdown("### 🟢 Optimized (Federated-Style)")
-        st.dataframe(df_o)
+        st.markdown("### 🟢 Optimized (Privacy-Preserving)")
+        st.dataframe(df_optimized, use_container_width=True)
 
     st.divider()
 
     # --------------------------------------------------
-    # CHARTS
+    # PERFORMANCE CHART
     # --------------------------------------------------
-    st.subheader("📈 Performance Comparison (Before vs After)")
+    st.subheader("📈 Network Usage Comparison")
 
-    fig, ax = plt.subplots()
-    ax.bar(df_c["Device"], df_c["Network"], label="Centralized")
-    ax.bar(df_o["Device"], df_o["Network"], label="Optimized")
-    ax.set_ylabel("Network Usage Level")
-    ax.set_title("Network Usage Reduction")
-    ax.legend()
-    st.pyplot(fig)
+    chart_df = pd.DataFrame({
+        "Centralized": df_centralized["Network Usage"],
+        "Optimized": df_optimized["Network Usage"]
+    }, index=df_centralized["Device"])
+
+    st.bar_chart(chart_df)
 
     st.divider()
 
     # --------------------------------------------------
     # FEDERATED OPTIMIZATION LOG
     # --------------------------------------------------
-    st.subheader("📜 Federated Optimization Log")
+    st.subheader("📜 Optimization Process Log")
 
-    for log in federated_log:
+    for log in log_messages:
         st.code(log)
 
     st.divider()
 
     # --------------------------------------------------
-    # PRIVACY CONFIRMATION
+    # PRIVACY SUMMARY
     # --------------------------------------------------
     st.subheader("🔐 Privacy Preservation Summary")
 
     st.success("""
-    ✔ Data processed locally on devices  
-    ✔ Raw personal data blocked  
-    ✔ Only optimized updates shared  
-    ✔ Reduced network usage and risk  
+    ✔ Data processed locally on mobile devices  
+    ✔ Raw personal information blocked  
+    ✔ Reduced network communication  
+    ✔ Improved performance and security  
     """)
 
 # --------------------------------------------------
 # FOOTER
 # --------------------------------------------------
-st.caption("Academic working model – simulated device optimization with federated principles")
+st.caption("Academic working model – Device Optimization for Privacy-Preserving Mobile Computing")
