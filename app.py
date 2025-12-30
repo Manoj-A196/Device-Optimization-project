@@ -11,12 +11,12 @@ st.set_page_config(
 )
 
 st.title("📱 Device Optimization for Privacy-Preserving Mobile Computing")
-st.caption("Interactive Working Model | Input → Optimization → Output")
+st.caption("Input → Processing → Output (Working Demo Model)")
 
 st.divider()
 
 # --------------------------------------------------
-# FIXED DEVICE INPUTS (NO SLIDER)
+# FIXED DEVICES (NO SLIDER)
 # --------------------------------------------------
 st.subheader("🔧 Mobile Device Inputs")
 
@@ -60,12 +60,12 @@ for i, d in enumerate(devices):
 st.divider()
 
 # --------------------------------------------------
-# HELPER FUNCTIONS
+# HELPER FUNCTIONS (IMPORTANT)
 # --------------------------------------------------
-def usage_to_num(value):
+def to_numeric(value):
     return {"Low": 1, "Medium": 2, "High": 3}[value]
 
-def calculate_risk(data, network):
+def risk_level(data, network):
     if "Personal Information" in data or network == "High":
         return "High 🔴"
     elif "Location" in data:
@@ -78,78 +78,79 @@ def calculate_risk(data, network):
 # --------------------------------------------------
 if st.button("▶ Run Device Optimization"):
 
-    centralized = []
-    optimized = []
+    centralized_rows = []
+    optimized_rows = []
 
     for d in device_inputs:
-        # CENTRALIZED
-        c_cpu = usage_to_num(d["CPU"])
-        c_net = usage_to_num(d["Network"])
-        c_risk = calculate_risk(d["Data"], d["Network"])
+        # ---------- CENTRALIZED ----------
+        c_cpu = to_numeric(d["CPU"])
+        c_net = to_numeric(d["Network"])
+        c_risk = risk_level(d["Data"], d["Network"])
 
-        centralized.append([
-            d["Device"], d["App"], c_cpu, c_net, c_risk
-        ])
+        centralized_rows.append({
+            "Device": d["Device"],
+            "CPU": c_cpu,
+            "Network": c_net,
+            "Privacy Risk": c_risk
+        })
 
-        # OPTIMIZED (PRIVACY PRESERVING)
+        # ---------- OPTIMIZED ----------
         o_cpu = max(1, c_cpu - 1)
         o_net = 1
         filtered_data = [x for x in d["Data"] if x != "Personal Information"]
-        o_risk = calculate_risk(filtered_data, "Low")
+        o_risk = risk_level(filtered_data, "Low")
 
-        optimized.append([
-            d["Device"], d["App"], o_cpu, o_net, o_risk
-        ])
+        optimized_rows.append({
+            "Device": d["Device"],
+            "CPU": o_cpu,
+            "Network": o_net,
+            "Privacy Risk": o_risk
+        })
 
     # --------------------------------------------------
-    # TABLE OUTPUT
+    # DATAFRAMES
     # --------------------------------------------------
-    df_c = pd.DataFrame(
-        centralized,
-        columns=["Device", "App", "CPU Usage", "Network Usage", "Privacy Risk"]
-    )
-
-    df_o = pd.DataFrame(
-        optimized,
-        columns=["Device", "App", "CPU Usage", "Network Usage", "Privacy Risk"]
-    )
+    df_c = pd.DataFrame(centralized_rows)
+    df_o = pd.DataFrame(optimized_rows)
 
     st.subheader("📊 Processing Comparison")
 
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("### 🔴 Centralized Processing")
+        st.markdown("### 🔴 Centralized")
         st.dataframe(df_c, use_container_width=True)
 
     with col2:
-        st.markdown("### 🟢 Optimized (Privacy-Preserving)")
+        st.markdown("### 🟢 Optimized")
         st.dataframe(df_o, use_container_width=True)
 
     st.divider()
 
     # --------------------------------------------------
-    # CLEAR GRAPH (FIXED)
+    # BAR GRAPH (GUARANTEED VISIBLE)
     # --------------------------------------------------
-    st.subheader("📈 Network Usage Reduction (Before vs After)")
+    st.subheader("📈 Network Usage Comparison (Before vs After)")
 
     graph_df = pd.DataFrame({
-        "Centralized": df_c["Network Usage"],
-        "Optimized": df_o["Network Usage"]
+        "Centralized": df_c["Network"].values,
+        "Optimized": df_o["Network"].values
     }, index=df_c["Device"])
 
-    st.bar_chart(graph_df, use_container_width=True)
+    st.bar_chart(graph_df)
+
+    st.caption("1 = Low, 2 = Medium, 3 = High")
 
     st.divider()
 
     # --------------------------------------------------
-    # PRIVACY CONFIRMATION
+    # PRIVACY SUMMARY
     # --------------------------------------------------
     st.subheader("🔐 Privacy Preservation Result")
 
     st.success("""
     ✔ Raw personal data blocked  
-    ✔ Data processed locally on devices  
+    ✔ Data processed locally  
     ✔ Network usage reduced  
     ✔ Device performance optimized  
     """)
